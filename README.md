@@ -12,7 +12,7 @@ This project is a **backend data-processing pipeline** for audio and video files
 
 ## Demo
 
-![Demo](./public/demo.webm)
+https://github.com/user-attachments/assets/1785c7e2-6bd2-4204-83e2-1e9cbc3faa32
 
 ---
 
