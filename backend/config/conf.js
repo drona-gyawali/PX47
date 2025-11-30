@@ -12,6 +12,14 @@ const S3_ENDPOINT = process.env.S3_ENDPOINT;
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 const S3_BUCKET_OBJECT_URL = process.env.S3_BUCKET_OBJECT_URL;
 const S3_REGION = process.env.S3_REGION;
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
+
+const corsOptions = {
+  origin: FRONTEND_ORIGIN,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+};
 
 export {
   PORT,
@@ -25,4 +33,5 @@ export {
   S3_BUCKET_NAME,
   S3_BUCKET_OBJECT_URL,
   S3_REGION,
+  corsOptions,
 };

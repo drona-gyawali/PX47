@@ -5,19 +5,14 @@ import { LoggerMiddleware } from '../middleware/logger.middleware.js';
 import { errorHandler } from '../middleware/errorHandler.middleware.js';
 import cors from 'cors';
 import authRoutes from '../routes/index.js';
-
+import { corsOptions } from './conf.js';
 const app = Express();
 app.use(LoggerMiddleware);
 app.use(Express.json());
 app.use(errorHandler);
 app.use(cookieParser());
 app.use(LoggerMiddleware);
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  }),
-);
+app.use(cors(corsOptions));
 
 app.use('/api/v1/', authRoutes);
 

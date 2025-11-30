@@ -4,12 +4,20 @@ import { JWT_SECRET } from './config/conf.js';
 import status from 'http-status-codes';
 import { randomUUID } from 'crypto';
 import fs from 'fs/promises';
-import { LOCAL_FOLDER } from './config/constants.js';
+import {
+  LOCAL_FOLDER,
+  VIDEO_EXTENSIONS,
+  AUDIO_EXTENSIONS,
+  VIDEOMIME,
+  AUDIOMIME,
+} from './config/constants.js';
 import path, { dirname } from 'path';
 import { logger } from './config/logger.js';
 import { fileURLToPath } from 'url';
 import AudioService from './services/audioService.js';
 import { ZodError } from 'zod';
+import { Bucket } from './config/s3.js';
+import { VideoService } from './services/videoService.js';
 
 export const hashPassword = async (rawPassword) => {
   try {
@@ -57,7 +65,7 @@ export const setCookie = (req, res, token, isRefresh) => {
   const name = isRefresh ? 'refresh_token' : 'access_token';
   res.cookie(name, token, {
     httpOnly: true,
-    sameSite: 'none',
+    sameSite: 'lax',
     secure: false,
     path: '/',
   });
@@ -97,13 +105,28 @@ export const getFileExt = (filepath) => {
 export const generateOutputFile = (inputPath, ext = null) => {
   const dir = path.dirname(inputPath);
   const name = path.basename(inputPath, path.extname(inputPath));
-  return path.join(dir, `${name}.${ext || path.extname(inputPath).slice(1)}`);
+  const uniqueKey = randomUUID();
+  const uuid_ = uniqueKey.split('-')[0];
+  return path.join(
+    dir,
+    `${name}-${uuid_}.${ext || path.extname(inputPath).slice(1)}`,
+  );
 };
 
 export const ignoreExt = (inputFile) => {
   const ext = ['.m4p', '.dss', '.xma', '.ape', '.alac'];
   return ext.includes(inputFile.split('.')[0]);
 };
+
+export function CheckExt(FileName) {
+  const _file = FileName?.split('.')[1];
+  const IsAudio = AUDIO_EXTENSIONS.includes(_file);
+  const IsVideo = VIDEO_EXTENSIONS.includes(_file);
+  return {
+    IsAudio,
+    IsVideo,
+  };
+}
 
 export const generateS3Key = (userId, filename) => {
   const uniqueKey = randomUUID();
@@ -134,10 +157,66 @@ export async function deleteLocalFile(filePath) {
   }
 }
 
-export async function SaveMetadatatoDb(audioId, userId, audioData, job) {
+export function generateContentType(metadata, streamType = 'video') {
+  if (!metadata || !metadata.streams) return null;
+
+  const stream = metadata.streams.find((s) => s.codec_type === streamType);
+  if (!stream) return null;
+
+  const codec = stream.codec_name;
+
+  if (streamType === 'video') {
+    return VIDEOMIME[codec] || 'video/mp4';
+  }
+
+  if (streamType === 'audio') {
+    return AUDIOMIME[codec] || 'audio/mpeg';
+  }
+
+  return null;
+}
+
+export async function SaveAudioMetadatatoDb(audioId, userId, audioData, job) {
   const audioService = new AudioService();
   try {
     await audioService.UpdateAudioService(audioData, audioId, userId);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      logger.error(
+        `Zod validation failed | job=${job.id} | errors=${JSON.stringify(error.errors)}`,
+      );
+    } else {
+      logger.error(
+        `Audio preprocessing error | job=${job.id} | ${error.message}`,
+      );
+    }
+    throw error;
+  }
+}
+
+export async function CreateAudioMetadatatoDb(userId, audioData, job) {
+  const audioService = new AudioService();
+  try {
+    audioData.userId = userId;
+    const data = await audioService.CreateAudioService(audioData);
+    return data;
+  } catch (error) {
+    if (error instanceof ZodError) {
+      logger.error(
+        `Zod validation failed | job=${job.id} | errors=${JSON.stringify(error.errors)}`,
+      );
+    } else {
+      logger.error(`Audio creation error | job=${job.id} | ${error.message}`);
+    }
+    throw error;
+  }
+}
+
+export async function SaveVideoMetadatatoDb(videoId, userId, videoData, job) {
+  const videoService = new VideoService();
+  try {
+    const data = await videoService.UpdateVideo(videoData, videoId, userId);
+    return data;
   } catch (error) {
     if (error instanceof ZodError) {
       logger.error(
@@ -156,9 +235,18 @@ export function jobMetadata(job) {
   const s3Key = job.data.s3Key;
   const userId = job.data.userId;
   const audioId = job.data.audioId;
+  const videoId = job.data.videoId || null;
   return {
     s3Key,
     userId,
     audioId,
+    videoId,
   };
 }
+
+export const parseFps = (fpsValue) => {
+  if (!fpsValue || fpsValue === '0/0') return 0;
+  const [num, den] = fpsValue.split('/').map(Number);
+  if (!num || !den) return 0;
+  return num / den;
+};

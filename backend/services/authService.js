@@ -33,12 +33,12 @@ class AuthService {
       const validated = RegisterSchema.parse({ email, password });
       const { email: validatedEmail, password: validatedPassword } = validated;
       const verifyUser = await this.auth.GetUser(validatedEmail);
-      if (!verifyUser) return { message: 'Unregistered user' };
+      if (!verifyUser) return { valueError: 'Unregistered user' };
       const credentialCheck = await verifyPassword(
         validatedPassword,
         verifyUser.password,
       );
-      if (!credentialCheck) return { message: 'Password mismatch' };
+      if (!credentialCheck) return { valueError: 'Password mismatch' };
       const token = createToken(verifyUser.id, '1h');
       return token;
     } catch (error) {

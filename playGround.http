@@ -1,0 +1,115 @@
+@Cookie=access_token=xxxxx
+
+### Register User
+POST http://localhost:3000/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "xxx",
+  "password": "xxxx"
+}
+
+### Login User
+POST http://localhost:3000/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "xxxx",
+  "password": "xxxxxx"
+}
+
+
+### get user
+GET http://localhost:3000/api/v1/auth/profile
+Cookie: {{Cookie}}
+
+### post audio
+POST http://localhost:3000/api/v1/audio
+Cookie: {{Cookie}}
+Content-Type: application/json
+
+{
+  "s3": {},
+  "fileName": "shroof.wav",
+  "fileType": ".wav",
+  "status": "uploading"
+}
+
+
+### update audio
+PUT http://localhost:3000/api/v1/audio/:audioId
+Cookie: {{Cookie}}
+Content-Type: application/json
+
+{
+ 
+  "duration": 120.5,
+  "sampleRate": 44100,
+  "channels": 2,
+  "codec": "mp3",
+  "comments": "Test upload",
+  "trackNumber": 1,
+  "status": "processing"
+}
+
+
+
+### generate presigned url
+POST http://localhost:3000/api/v1/generate-presigned-url/:fileName
+Cookie: {{Cookie}}
+
+
+###
+POST http://localhost:3000/api/v1/fileUploaded/audioId
+Cookie: {{Cookie}}
+Content-Type: application/json
+
+{
+  "key": "691cba5866f6b973922b3824-xxxxx-example.wav"
+}
+
+
+### GET
+GET http://localhost:3000/api/v1/contents?page=1&limit=10
+Cookie: {{Cookie}}
+
+### grant content access
+POST http://localhost:3000/api/v1/get-content-access/691cba5866f6b973922b3824-xxxxxxxxxxxxxx-f41104b7-song.json 
+Cookie: {{Cookie}}
+
+
+
+### create video
+POST http://localhost:3000/api/v1/video
+Cookie: {{Cookie}}
+Content-Type: application/json
+
+{
+  "s3": {},
+  "filename": "yt.mp4",
+  "status": "uploading"
+}
+
+
+### update video
+PUT http://localhost:3000/api/v1/video/:videoId
+Cookie: {{Cookie}}
+Content-Type: application/json
+
+{
+ 
+  "duration": 120.5,
+  "sampleRate": 44100,
+  "codec": ".webp",
+  "status": "processing"
+}
+
+
+### Video uplaod
+POST http://localhost:3000/api/v1/videoUploaded/videoId
+Cookie: {{Cookie}}
+Content-Type: application/json
+
+{
+  "key": "691cba5866f6b973922b3824-xxxxxxxx-vshitdeo.mp4"
+}

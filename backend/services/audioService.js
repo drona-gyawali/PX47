@@ -22,6 +22,7 @@ class AudioService {
     } catch (error) {
       logger.error(`Error | fx=CreateAudioService | error=${error}`);
       if (error instanceof ZodError) {
+        logger.error(`Error | fx=CreateAudioService | error=${error}`);
         return error;
       }
       return error;

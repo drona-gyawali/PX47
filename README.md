@@ -1,84 +1,100 @@
 # Audio Processing Backend System
 
-This project is a backend data-processing pipeline for audio files, built with Express. It allows users to upload audio directly to S3, then processes those files asynchronously using BullMQ + Redis workers. Once triggered, the pipeline downloads the audio, performs format conversion, metadata extraction, and waveform JSON generation, and finally uploads the processed MP3 and waveform data back to S3.
+This project is a **backend data-processing pipeline** for audio and video files, built with **Express.js**. Users can upload files directly to **S3** using pre-signed URLs, and files are processed asynchronously using **BullMQ + Redis workers**. The pipeline handles format conversion, metadata extraction, waveform generation, and uploads the processed files back to S3.
 
 ---
 
 ## Architecture Overview
-![Audio Processing Architecture](./public/architecture.webp)
+
+![Video and Audio Processing Architecture](./public/architect.webp)
+
+---
+
+## Demo
+
+![Demo](./public/demo.webm)
+
 ---
 
 ## Features
 
-- Direct **S3 uploads via pre-signed URLs**.
-- Automatic **triggering of workers** after file upload.
-- Audio **format conversion** to MP3 (if required).
-- **Metadata extraction** from audio files.
-- **Waveform generation** stored as JSON.
-- Processed files and waveform JSON are uploaded back to S3 with server-generated keys.
-- Asynchronous processing using **BullMQ** and **Redis**.
+* Direct **S3 uploads via pre-signed URLs**
+* Automatic **worker triggering** after file upload
+* Audio **format conversion** (e.g., MP3/AAC)
+* **Metadata extraction** from audio/video files
+* **Waveform generation** stored as JSON
+* Processed files and waveform JSON are uploaded back to S3
+* Asynchronous processing with **BullMQ** + **Redis**
 
 ---
 
 ## Prerequisites
 
-Before running the project, ensure you have the following installed:
+Make sure the following are installed:
 
-- [Node.js](https://nodejs.org/en/)
-- [npm](https://www.npmjs.com/)
-- [FFmpeg](https://ffmpeg.org/download.html)
-- [audiowaveform](https://github.com/bbc/audiowaveform)
-- Redis server
+* [Node.js](https://nodejs.org/en/)
+* [npm](https://www.npmjs.com/)
+* [FFmpeg](https://ffmpeg.org/download.html)
+* [audiowaveform](https://github.com/bbc/audiowaveform)
+* Redis server
 
 ---
 
 ## Installation
-`npm install`
 
-### Usage
-##### Run Backend Sever
-`npm run dev`
-
-
-##### Run Worker (seperate node process)
-`npm run worker`
-
-
-### Prisma setup
-`npx prisma generate`
-
-`npx prisma db push`
-
-### Linter
-`npm run lint:fix`
-
-`npm run format`
+```bash
+npm install
+```
 
 ---
 
-> Note: Make sure Redis server is running before starting the worker.
-FFmpeg and audiowaveform must be installed and available in the system PATH.
+## Usage
+
+### Run Backend Server
+
+```bash
+npm run dev
+```
+
+### Run Worker (separate Node process)
+
+```bash
+npm run worker
+```
+
+### Prisma Setup
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+### Linter & Formatter
+
+```bash
+npm run lint
+npm run lint:fix
+npm run format
+```
+
+> Make sure Redis is running before starting the worker.
+> FFmpeg and audiowaveform must be installed and available in your system PATH.
 
 ---
 
+## Workflow
 
-#### Workflow
+1. Client requests a **pre-signed URL** from the backend
+2. Client uploads the file directly to **S3**
+3. A **worker** picks up the uploaded file
+4. Worker downloads the file locally (required by FFmpeg)
+5. Extracts **metadata** using FFprobe
+6. Generates a **mute video** from the original video
+7. Extracts **audio-only** track and converts to **AAC format**
+8. Generates **waveform JSON** for the audio
+9. Uploads processed files back to **S3**
+10. Saves all **metadata and S3 keys** in the database
 
-1. User requests a **pre-signed URL** for uploading audio.
-
-2. User uploads the file **directly to S3**.
-
-3. After upload, **worker is triggered** via Redis/BullMQ queue.
-
-4. Worker **downloads the file from S3** to local storage.
-
-5. Audio file is processed:
-
-    - Converted to MP3 (if necessary)
-
-    - Metadata is extracted
-
-    - Waveform JSON is generated
-
-9. Processed MP3 and waveform JSON are uploaded back to S3.
+---
+Love it! Give it a star ⭐
 ---

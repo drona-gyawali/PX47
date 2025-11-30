@@ -8,6 +8,11 @@ import {
   getUserContent,
   getContentAccess,
 } from '../controller/audioController.js';
+import {
+  CreateVideo,
+  UpdateVideo,
+  VideoUploadCompleted,
+} from '../controller/videoController.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
@@ -26,6 +31,18 @@ router.post('/audio', AuthMiddleware, CreateAudio);
 router.put('/audio/:audioId', AuthMiddleware, UpdateAudio);
 
 /* 
+    video route
+*/
+router.post('/video', AuthMiddleware, CreateVideo);
+router.put('/video/:videoId', AuthMiddleware, UpdateVideo);
+
+/* 
+    s3 video confirmation
+*/
+
+router.post('/videoUploaded/:videoId', AuthMiddleware, VideoUploadCompleted);
+
+/* 
     Presigned url generator
 */
 router.post(
@@ -35,7 +52,7 @@ router.post(
 );
 
 /* 
-    S3 upload confirmation
+    S3 audio upload confirmation
 */
 router.post('/fileUploaded/:audioId', AuthMiddleware, fileUploadCompleted);
 

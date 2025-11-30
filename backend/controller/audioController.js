@@ -1,8 +1,9 @@
 import AudioService from '../services/audioService.js';
 import { logger } from '../config/logger.js';
-import { errorResponse, successResponse } from '../helpers.js';
+import { CheckExt, errorResponse, successResponse } from '../helpers.js';
 import status from 'http-status-codes';
 import { Bucket } from '../config/s3.js';
+import { VideoService } from '../services/videoService.js';
 
 export const CreateAudio = async (req, res) => {
   try {
@@ -58,20 +59,52 @@ export const generatePresignedUrl = async (req, res) => {
   try {
     const { fileName } = req.params;
     const s3 = new Bucket();
+
     const objectStorage = await s3.CreatePresignedUrl(
       req.user.userId,
       fileName.toString(),
     );
+
     let audioData = {
-      ...req.params,
+      fileName: fileName,
       userId: req.user.userId,
       status: 'uploading',
     };
-    const metadata = await new AudioService().CreateAudioService(audioData);
-    audioData = { ...audioData, audioId: metadata.id, objects: objectStorage };
-    successResponse(res, audioData, status.CREATED);
+
+    let videoData = {
+      userId: req.user.userId,
+      filename: fileName,
+      status: 'uploading',
+    };
+
+    const { IsAudio } = CheckExt(fileName);
+
+    let responseData = await (async () => {
+      if (IsAudio) {
+        const metadata = await new AudioService().CreateAudioService(audioData);
+
+        audioData = {
+          ...audioData,
+          audioId: metadata.id,
+          objects: objectStorage,
+        };
+
+        return { audioData };
+      } else {
+        const data = await new VideoService().createVideo(videoData);
+
+        videoData = {
+          ...videoData,
+          videoId: data.id,
+          objects: objectStorage,
+        };
+
+        return { videoData };
+      }
+    })();
+
+    successResponse(res, responseData, status.CREATED);
   } catch (error) {
-    console.log(error);
     errorResponse(res, JSON.stringify(error));
   }
 };
