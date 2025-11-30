@@ -1,4 +1,4 @@
-# Audio Processing Backend System
+# Media Processing Backend System
 
 This project is a **backend data-processing pipeline** for audio and video files, built with **Express.js**. Users can upload files directly to **S3** using pre-signed URLs, and files are processed asynchronously using **BullMQ + Redis workers**. The pipeline handles format conversion, metadata extraction, waveform generation, and uploads the processed files back to S3.
 
